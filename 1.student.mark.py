@@ -6,16 +6,28 @@ nums_of_students = 0
 nums_of_courses = 0
 
 def list_student_marks_for_a_course():
-    pass
+    try:
+        print("Which course?")
+        course_name = input()
+        if course_name not in [c["name"] for c in courses]:
+            raise ValueError(f"Invalid course {course_name}")
+        for i in range(0, len(students)):
+            print(f'{i+1}. ID: {students[i]["id"]} Name: {students[i]["name"]} {course_name}: {students[i][course_name]}')
+    except ValueError as e:
+        print(e)
 
 def input_student_marks_for_a_course():
     if(len(students) == 0):
         print("There aren't any student yet!")
         return
     try:
+        print("Which course?")
         course_name = input()
         if course_name not in [c["name"] for c in courses]:
             raise ValueError(f"Invalid course {course_name}")
+        for i in range(0, len(students)):
+            print(f'{i+1}. ID: {students[i]["id"]} Name: {students[i]["name"]}')
+            students[i][course_name] = float(input())
     except ValueError as e:
         print(e)
 
@@ -35,7 +47,7 @@ def list_course():
         print("There aren't any course yet!")
         return
 
-    print("List of student(s):")
+    print("List of course(s):")
     for i in range(0, len(courses)):
         print(
             f'{i+1}. ID: {courses[i]["id"]} Name: {courses[i]["name"]}'
