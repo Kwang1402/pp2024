@@ -5,6 +5,7 @@ courses = []
 nums_of_students = 0
 nums_of_courses = 0
 
+
 def list_student_marks_for_a_course():
     try:
         print("Which course?")
@@ -12,12 +13,15 @@ def list_student_marks_for_a_course():
         if course_name not in [c["name"] for c in courses]:
             raise ValueError(f"Invalid course {course_name}")
         for i in range(0, len(students)):
-            print(f'{i+1}. ID: {students[i]["id"]} Name: {students[i]["name"]} {course_name}: {students[i][course_name]}')
+            print(
+                f'{i+1}. ID: {students[i]["id"]} Name: {students[i]["name"]} {course_name}: {students[i][course_name]}'
+            )
     except ValueError as e:
         print(e)
 
+
 def input_student_marks_for_a_course():
-    if(len(students) == 0):
+    if len(students) == 0:
         print("There aren't any student yet!")
         return
     try:
@@ -31,6 +35,7 @@ def input_student_marks_for_a_course():
     except ValueError as e:
         print(e)
 
+
 def list_students():
     if len(students) == 0:
         print("There aren't any student yet!")
@@ -42,6 +47,7 @@ def list_students():
             f'{i+1}. ID: {students[i]["id"]} Name: {students[i]["name"]} DoB: {students[i]["date_of_birth"]}'
         )
 
+
 def list_course():
     if len(courses) == 0:
         print("There aren't any course yet!")
@@ -49,9 +55,8 @@ def list_course():
 
     print("List of course(s):")
     for i in range(0, len(courses)):
-        print(
-            f'{i+1}. ID: {courses[i]["id"]} Name: {courses[i]["name"]}'
-        )    
+        print(f'{i+1}. ID: {courses[i]["id"]} Name: {courses[i]["name"]}')
+
 
 def add_new_student():
     print("ID:")
@@ -63,6 +68,7 @@ def add_new_student():
     student = {"id": id, "name": name, "date_of_birth": date_of_birth}
     students.append(student)
 
+
 def add_new_course():
     print("ID:")
     id = str(input())
@@ -70,6 +76,9 @@ def add_new_course():
     name = str(input())
     course = {"id": id, "name": name}
     courses.append(course)
+    for student in students:
+        student[course["name"]] = -1
+
 
 def get_number_of_students():
     global nums_of_students
@@ -127,7 +136,7 @@ def main():
         "5": add_new_course,
         "6": list_course,
         "7": input_student_marks_for_a_course,
-        "8": list_student_marks_for_a_course
+        "8": list_student_marks_for_a_course,
     }
     while True:
         prompt()
