@@ -143,7 +143,7 @@ def prompt():
 2. List course(s) of a student.
 3. Create a new student.
 4. List student(s).
-5. Input course mark for a student.
+5. Update course mark for a student.
 =======================================
         """
     )

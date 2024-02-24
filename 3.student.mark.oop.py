@@ -5,6 +5,7 @@ from typing import List
 import abc
 from dataclasses import dataclass
 import math
+import numpy
 
 class AbstractRepository(abc.ABC):
     @abc.abstractmethod
@@ -35,9 +36,21 @@ class Student:
         self.name = name
         self.date_of_birth = date_of_birth
         self.courses = courses
+    
+    def gpa(self) -> float:
+        total_credit = 0
+        weighted_sum = 0
+        for course in self.courses:
+            total_credit = total_credit + course.credit
+            weighted_sum = weighted_sum + course.credit * course.mark
+        
+        if total_credit == 0:
+            return 0.0
+        
+        return math.round(weighted_sum/total_credit, 1)
 
 class Course:
-    def __init__(self, id: str, name: str, credit: int, mark: float = None):
+    def __init__(self, id: str, name: str, credit: int, mark: float = 0):
         self.id = id
         self.name = name
         self.credit = credit
