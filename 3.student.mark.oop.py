@@ -47,7 +47,7 @@ class Student:
         if total_credit == 0:
             return 0.0
         
-        return math.round(weighted_sum/total_credit, 1)
+        return round(weighted_sum/total_credit, 1)
 
 class Course:
     def __init__(self, id: str, name: str, credit: int, mark: float = 0):
@@ -91,6 +91,9 @@ class UpdateCourseMark(Command):
     student_id: str
     mark: float
 
+@dataclass
+class CalculateGPA(Command):
+    id: str
 
 def create_student(cmd: CreateStudent, repo: LocalRepository):
     repo.add(Student(cmd.id, cmd.name, cmd.date_of_birth, courses=[]))
@@ -134,12 +137,21 @@ def update_course_mark(cmd: UpdateCourseMark, repo: LocalRepository):
             if course is not None:
                 course.mark = math.floor(cmd.mark)
             else:
-                raise InvalidCourseId(f"Invalid student ID {cmd.id}")
+                raise InvalidCourseId(f"Invalid course ID {cmd.id}")
         else:
-            raise InvalidStudentId(f"Invalid course ID {cmd.course_id}")
+            raise InvalidStudentId(f"Invalid student ID {cmd.course_id}")
     except (InvalidCourseId, InvalidStudentId) as e:
         print(e)
 
+def calculate_gpa(cmd: CalculateGPA, repo: LocalRepository):
+    student = repo.get(id=cmd.id)
+    try:
+        if student is not None:
+            print(student.gpa())
+        else:
+            raise InvalidStudentId(f"Invalid student ID {cmd.id}")
+    except InvalidStudentId as e:
+        print(e)
 
 def end_program():
     print("Ending program...")
@@ -156,7 +168,8 @@ def prompt():
 2. List course(s) of a student.
 3. Create a new student.
 4. List student(s).
-5. Input course mark for a student.
+5. Update course mark for a student.
+6. Calculate GPA of a student
 =======================================
         """
     )
@@ -202,6 +215,12 @@ def prompt_update_course_mark(repo: LocalRepository):
 
     update_course_mark(UpdateCourseMark(id, student_id, mark), repo)
 
+def prompt_calculate_gpa(repo: LocalRepository):
+    print("ID: ")
+    id = str(input())
+
+    calculate_gpa(CalculateGPA(id), repo)
+
 def main():
     repo = LocalRepository([])
     HANDLERS = {
@@ -211,6 +230,7 @@ def main():
         "3": prompt_create_student,
         "4": prompt_list_students,
         "5": prompt_update_course_mark,
+        "6": prompt_calculate_gpa,
     }
     while True:
         prompt()

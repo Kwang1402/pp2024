@@ -121,9 +121,9 @@ def update_course_mark(cmd: UpdateCourseMark, repo: LocalRepository):
             if course is not None:
                 course.mark = cmd.mark
             else:
-                raise InvalidCourseId(f"Invalid student ID {cmd.id}")
+                raise InvalidCourseId(f"Invalid course ID {cmd.id}")
         else:
-            raise InvalidStudentId(f"Invalid course ID {cmd.course_id}")
+            raise InvalidStudentId(f"Invalid student ID {cmd.course_id}")
     except (InvalidCourseId, InvalidStudentId) as e:
         print(e)
 
