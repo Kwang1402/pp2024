@@ -5,7 +5,8 @@ from typing import List
 import abc
 from dataclasses import dataclass
 import math
-import numpy
+import numpy as np
+import curses
 
 class AbstractRepository(abc.ABC):
     @abc.abstractmethod
@@ -99,37 +100,44 @@ def create_student(cmd: CreateStudent, repo: LocalRepository):
     repo.add(Student(cmd.id, cmd.name, cmd.date_of_birth, courses=[]))
 
 
-def add_course(cmd: AddCourse, repo: LocalRepository):
+def add_course(stdscr, cmd: AddCourse, repo: LocalRepository):
     student = repo.get(id=cmd.student_id)
     try:
         if student is not None:
             student.courses.append(Course(cmd.id, cmd.name, cmd.credit))
         else:
-            raise InvalidStudentId(f"Invalid student ID {cmd.student_id}")
+            raise InvalidStudentId(f"Invalid student ID {cmd.student_id}\n")
     except InvalidStudentId as e:
-        print(e)
+        stdscr.addstr(str(e))
+        stdscr.addstr('Press any key to continue...')
+        stdscr.getch()
 
-def list_student_courses(cmd: ListStudentCourses, repo: LocalRepository):
+def list_student_courses(stdscr, cmd: ListStudentCourses, repo: LocalRepository):
     student = repo.get(id=cmd.id)
     try:
         if student is not None:
             for index, course in enumerate(student.courses, start=1):
-                print(
-                    f"{index}. {course.id} {course.name} {course.credit} {course.mark}"
+                stdscr.addstr(
+                    f"{index}. {course.id} {course.name} {course.credit} {course.mark}\n"
                 )
         else:
-            raise InvalidStudentId(f"Invalid student ID {cmd.id}")
+            raise InvalidStudentId(f"Invalid student ID {cmd.id}\n")
     except InvalidStudentId as e:
-        print(e)
+        stdscr.addstr(str(e))
+    stdscr.addstr('Press any key to continue...')
+    stdscr.getch()
 
 
-def list_students(repo: LocalRepository):
+def list_students(stdscr, repo: LocalRepository):
     students = repo.list()
-    for index, student in enumerate(students, start=1):
-        print(f"{index}. {student.id} {student.name} {student.date_of_birth}")
+    sorted_students = np.array(sorted(np.array(list(students), dtype=object), key=lambda student: student.gpa(), reverse=True), dtype=object)
+    for index, student in enumerate(sorted_students, start=1):
+        stdscr.addstr(f"{index}. {student.id} {student.name} {student.date_of_birth} {student.gpa()}\n")
+    stdscr.addstr('Press any key to continue...')
+    stdscr.getch()
 
 
-def update_course_mark(cmd: UpdateCourseMark, repo: LocalRepository):
+def update_course_mark(stdscr, cmd: UpdateCourseMark, repo: LocalRepository):
     student = repo.get(id=cmd.student_id)
     try:
         if student is not None:
@@ -137,30 +145,35 @@ def update_course_mark(cmd: UpdateCourseMark, repo: LocalRepository):
             if course is not None:
                 course.mark = math.floor(cmd.mark)
             else:
-                raise InvalidCourseId(f"Invalid course ID {cmd.id}")
+                raise InvalidCourseId(f"Invalid course ID {cmd.id}\n")
         else:
-            raise InvalidStudentId(f"Invalid student ID {cmd.course_id}")
+            raise InvalidStudentId(f"Invalid student ID {cmd.course_id}\n")
     except (InvalidCourseId, InvalidStudentId) as e:
-        print(e)
+        stdscr.addstr(str(e))
+        stdscr.addstr('Press any key to continue...')
+        stdscr.getch()
 
-def calculate_gpa(cmd: CalculateGPA, repo: LocalRepository):
+def calculate_gpa(stdscr, cmd: CalculateGPA, repo: LocalRepository):
     student = repo.get(id=cmd.id)
     try:
         if student is not None:
-            print(student.gpa())
+            stdscr.addstr(str(student.gpa()) + '\n')
         else:
-            raise InvalidStudentId(f"Invalid student ID {cmd.id}")
+            raise InvalidStudentId(f"Invalid student ID {cmd.id}\n")
     except InvalidStudentId as e:
-        print(e)
+        stdscr.addstr(str(e))
+    stdscr.addstr('Press any key to continue...')
+    stdscr.getch()
 
-def end_program():
-    print("Ending program...")
+def end_program(stdscr):
+    stdscr.addstr("Ending program...")
+    stdscr.refresh()
     sys.exit()
 
 
-def prompt():
-    print(
-        """
+def prompt(stdscr):
+    stdscr.addstr(
+"""
         Choose an option below
 =======================================
 0. Exit.
@@ -171,57 +184,78 @@ def prompt():
 5. Update course mark for a student.
 6. Calculate GPA of a student
 =======================================
-        """
+"""
     )
 
 
-def prompt_add_course(repo: LocalRepository):
-    print("Student ID:")
-    student_id = str(input())
-    print("ID:")
-    id = str(input())
-    print("Name:")
-    name = str(input())
-    print("Credit:")
-    credit = int(input())
+def prompt_add_course(stdscr, repo):
+    stdscr.addstr("Student ID:")
+    stdscr.refresh()
+    student_id = stdscr.getstr().decode("utf-8")
 
-    add_course(AddCourse(id, student_id, name, credit), repo)
+    stdscr.addstr("ID:")
+    stdscr.refresh()
+    id = stdscr.getstr().decode("utf-8")
 
-def prompt_list_student_courses(repo: LocalRepository):
-    print("Student ID:")
-    id = str(input())
+    stdscr.addstr("Name:")
+    stdscr.refresh()
+    name = stdscr.getstr().decode("utf-8")
 
-    list_student_courses(ListStudentCourses(id), repo)
+    stdscr.addstr("Credit:")
+    stdscr.refresh()
+    credit = int(stdscr.getstr().decode("utf-8"))
 
-def prompt_create_student(repo: LocalRepository):
-    print("Student ID:")
-    id = str(input())
-    print("Student name:")
-    name = str(input())
-    print("Date of Birth: ")
-    date_of_birth = str(input())
+    add_course(stdscr, AddCourse(id, student_id, name, credit), repo)
+
+def prompt_list_student_courses(stdscr, repo):
+    stdscr.addstr("Student ID:")
+    stdscr.refresh()
+    id = stdscr.getstr().decode("utf-8")
+
+    list_student_courses(stdscr, ListStudentCourses(id), repo)
+
+def prompt_create_student(stdscr, repo):
+    stdscr.addstr("Student ID:")
+    stdscr.refresh()
+    id = stdscr.getstr().decode("utf-8")
+
+    stdscr.addstr("Student name:")
+    stdscr.refresh()
+    name = stdscr.getstr().decode("utf-8")
+
+    stdscr.addstr("Date of Birth:")
+    stdscr.refresh()
+    date_of_birth = stdscr.getstr().decode("utf-8")
+
     create_student(CreateStudent(id, name, date_of_birth), repo)
 
-def prompt_list_students(repo: LocalRepository):
-    list_students(repo)
 
-def prompt_update_course_mark(repo: LocalRepository):
-    print("Student ID: ")
-    student_id = str(input())
-    print("ID:")
-    id = str(input())
-    print("Mark:")
-    mark = float(input())
+def prompt_list_students(stdscr, repo):
+    list_students(stdscr, repo)
 
-    update_course_mark(UpdateCourseMark(id, student_id, mark), repo)
+def prompt_update_course_mark(stdscr, repo):
+    stdscr.addstr("Student ID:")
+    stdscr.refresh()
+    student_id = stdscr.getstr().decode("utf-8")
 
-def prompt_calculate_gpa(repo: LocalRepository):
-    print("ID: ")
-    id = str(input())
+    stdscr.addstr("ID:")
+    stdscr.refresh()
+    id = stdscr.getstr().decode("utf-8")
 
-    calculate_gpa(CalculateGPA(id), repo)
+    stdscr.addstr("Mark:")
+    stdscr.refresh()
+    mark = float(stdscr.getstr().decode("utf-8"))
 
-def main():
+    update_course_mark(stdscr, UpdateCourseMark(id, student_id, mark), repo)
+
+def prompt_calculate_gpa(stdscr, repo):
+    stdscr.addstr("ID:")
+    stdscr.refresh()
+    id = stdscr.getstr().decode("utf-8")
+
+    calculate_gpa(stdscr, CalculateGPA(id), repo)
+
+def main(stdscr):
     repo = LocalRepository([])
     HANDLERS = {
         "0": end_program,
@@ -233,18 +267,25 @@ def main():
         "6": prompt_calculate_gpa,
     }
     while True:
-        prompt()
-        try:
-            handler = input()
-            if handler == "0":
-                HANDLERS[handler]()
-            if handler in HANDLERS:
-                HANDLERS[handler](repo)
-            else:
-                raise ValueError(f'Invalid option "{handler}".')
-        except ValueError as e:
-            print(e)
+        stdscr.clear()
+        prompt(stdscr)
+        stdscr.refresh()
+        curses.echo()
+
+        handler = stdscr.getstr().decode("utf-8")
+        if handler == "0":
+            HANDLERS[handler](stdscr)
+        if handler in HANDLERS:
+            # stdscr.clear()
+            HANDLERS[handler](stdscr, repo)
+            stdscr.refresh()
+        else:
+            stdscr.addstr(f'Invalid option "{handler}". Press any key to continue...')
+            stdscr.getch()
+            # stdscr.clear()
+
+        curses.noecho()
 
 
 if __name__ == "__main__":
-    main()
+    curses.wrapper(main)
