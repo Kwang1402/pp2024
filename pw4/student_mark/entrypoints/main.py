@@ -13,7 +13,11 @@ def end_program():
     sys.exit()
 
 
-def handle(command: commands.Command, repo: repositories.AbstractRepository, command_handlers=COMMANDS_HANDLERS):
+def handle(
+    command: commands.Command,
+    repo: repositories.AbstractRepository,
+    command_handlers=COMMANDS_HANDLERS,
+):
     handler = command_handlers[type(command)]
     result = handler(command, repo)
     return result
