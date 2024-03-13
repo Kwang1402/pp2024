@@ -3,10 +3,11 @@ import sys
 from datetime import date
 from typing import List
 import abc
-from dataclasses import dataclass
+import dataclasses
 import math
 import numpy as np
 import curses
+
 
 class AbstractRepository(abc.ABC):
     @abc.abstractmethod
@@ -31,24 +32,26 @@ class LocalRepository(AbstractRepository):
     def list(self):
         return self._students
 
+
 class Student:
     def __init__(self, id: str, name: str, date_of_birth: date, courses: List[Course]):
         self.id = id
         self.name = name
         self.date_of_birth = date_of_birth
         self.courses = courses
-    
+
     def gpa(self) -> float:
         total_credit = 0
         weighted_sum = 0
         for course in self.courses:
             total_credit = total_credit + course.credit
             weighted_sum = weighted_sum + course.credit * course.mark
-        
+
         if total_credit == 0:
             return 0.0
-        
-        return round(weighted_sum/total_credit, 1)
+
+        return round(weighted_sum / total_credit, 1)
+
 
 class Course:
     def __init__(self, id: str, name: str, credit: int, mark: float = 0):
@@ -56,6 +59,7 @@ class Course:
         self.name = name
         self.credit = credit
         self.mark = mark
+
 
 class Command:
     pass
@@ -68,33 +72,38 @@ class InvalidCourseId(Exception):
 class InvalidStudentId(Exception):
     pass
 
-@dataclass
+
+@dataclasses.dataclass
 class CreateStudent(Command):
     id: str
     name: str
     date_of_birth: date
 
-@dataclass
+
+@dataclasses.dataclass
 class AddCourse(Command):
     id: str
     student_id: str
     name: str
     credit: int
 
-@dataclass
+
+@dataclasses.dataclass
 class ListStudentCourses(Command):
     id: str
 
 
-@dataclass
+@dataclasses.dataclass
 class UpdateCourseMark(Command):
     id: str
     student_id: str
     mark: float
 
-@dataclass
+
+@dataclasses.dataclass
 class CalculateGPA(Command):
     id: str
+
 
 def create_student(cmd: CreateStudent, repo: LocalRepository):
     repo.add(Student(cmd.id, cmd.name, cmd.date_of_birth, courses=[]))
@@ -109,8 +118,9 @@ def add_course(stdscr, cmd: AddCourse, repo: LocalRepository):
             raise InvalidStudentId(f"Invalid student ID {cmd.student_id}\n")
     except InvalidStudentId as e:
         stdscr.addstr(str(e))
-        stdscr.addstr('Press any key to continue...')
+        stdscr.addstr("Press any key to continue...")
         stdscr.getch()
+
 
 def list_student_courses(stdscr, cmd: ListStudentCourses, repo: LocalRepository):
     student = repo.get(id=cmd.id)
@@ -124,16 +134,25 @@ def list_student_courses(stdscr, cmd: ListStudentCourses, repo: LocalRepository)
             raise InvalidStudentId(f"Invalid student ID {cmd.id}\n")
     except InvalidStudentId as e:
         stdscr.addstr(str(e))
-    stdscr.addstr('Press any key to continue...')
+    stdscr.addstr("Press any key to continue...")
     stdscr.getch()
 
 
 def list_students(stdscr, repo: LocalRepository):
     students = repo.list()
-    sorted_students = np.array(sorted(np.array(list(students), dtype=object), key=lambda student: student.gpa(), reverse=True), dtype=object)
+    sorted_students = np.array(
+        sorted(
+            np.array(list(students), dtype=object),
+            key=lambda student: student.gpa(),
+            reverse=True,
+        ),
+        dtype=object,
+    )
     for index, student in enumerate(sorted_students, start=1):
-        stdscr.addstr(f"{index}. {student.id} {student.name} {student.date_of_birth} {student.gpa()}\n")
-    stdscr.addstr('Press any key to continue...')
+        stdscr.addstr(
+            f"{index}. {student.id} {student.name} {student.date_of_birth} {student.gpa()}\n"
+        )
+    stdscr.addstr("Press any key to continue...")
     stdscr.getch()
 
 
@@ -150,20 +169,22 @@ def update_course_mark(stdscr, cmd: UpdateCourseMark, repo: LocalRepository):
             raise InvalidStudentId(f"Invalid student ID {cmd.course_id}\n")
     except (InvalidCourseId, InvalidStudentId) as e:
         stdscr.addstr(str(e))
-        stdscr.addstr('Press any key to continue...')
+        stdscr.addstr("Press any key to continue...")
         stdscr.getch()
+
 
 def calculate_gpa(stdscr, cmd: CalculateGPA, repo: LocalRepository):
     student = repo.get(id=cmd.id)
     try:
         if student is not None:
-            stdscr.addstr(str(student.gpa()) + '\n')
+            stdscr.addstr(str(student.gpa()) + "\n")
         else:
             raise InvalidStudentId(f"Invalid student ID {cmd.id}\n")
     except InvalidStudentId as e:
         stdscr.addstr(str(e))
-    stdscr.addstr('Press any key to continue...')
+    stdscr.addstr("Press any key to continue...")
     stdscr.getch()
+
 
 def end_program(stdscr):
     stdscr.addstr("Ending program...")
@@ -173,7 +194,7 @@ def end_program(stdscr):
 
 def prompt(stdscr):
     stdscr.addstr(
-"""
+        """
         Choose an option below
 =======================================
 0. Exit.
@@ -207,12 +228,14 @@ def prompt_add_course(stdscr, repo):
 
     add_course(stdscr, AddCourse(id, student_id, name, credit), repo)
 
+
 def prompt_list_student_courses(stdscr, repo):
     stdscr.addstr("Student ID:")
     stdscr.refresh()
     id = stdscr.getstr().decode("utf-8")
 
     list_student_courses(stdscr, ListStudentCourses(id), repo)
+
 
 def prompt_create_student(stdscr, repo):
     stdscr.addstr("Student ID:")
@@ -233,6 +256,7 @@ def prompt_create_student(stdscr, repo):
 def prompt_list_students(stdscr, repo):
     list_students(stdscr, repo)
 
+
 def prompt_update_course_mark(stdscr, repo):
     stdscr.addstr("Student ID:")
     stdscr.refresh()
@@ -248,12 +272,14 @@ def prompt_update_course_mark(stdscr, repo):
 
     update_course_mark(stdscr, UpdateCourseMark(id, student_id, mark), repo)
 
+
 def prompt_calculate_gpa(stdscr, repo):
     stdscr.addstr("ID:")
     stdscr.refresh()
     id = stdscr.getstr().decode("utf-8")
 
     calculate_gpa(stdscr, CalculateGPA(id), repo)
+
 
 def main(stdscr):
     repo = LocalRepository([])

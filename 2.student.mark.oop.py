@@ -29,6 +29,7 @@ class LocalRepository(AbstractRepository):
     def list(self):
         return self._students
 
+
 class Student:
     def __init__(self, id: str, name: str, date_of_birth: date, courses: List[Course]):
         self.id = id
@@ -36,12 +37,14 @@ class Student:
         self.date_of_birth = date_of_birth
         self.courses = courses
 
+
 class Course:
     def __init__(self, id: str, name: str, credit: int, mark: float = None):
         self.id = id
         self.name = name
         self.credit = credit
         self.mark = mark
+
 
 class Command:
     pass
@@ -54,11 +57,13 @@ class InvalidCourseId(Exception):
 class InvalidStudentId(Exception):
     pass
 
+
 @dataclass
 class CreateStudent(Command):
     id: str
     name: str
     date_of_birth: date
+
 
 @dataclass
 class AddCourse(Command):
@@ -66,6 +71,7 @@ class AddCourse(Command):
     student_id: str
     name: str
     credit: int
+
 
 @dataclass
 class ListStudentCourses(Command):
@@ -92,6 +98,7 @@ def add_course(cmd: AddCourse, repo: LocalRepository):
             raise InvalidStudentId(f"Invalid student ID {cmd.student_id}")
     except InvalidStudentId as e:
         print(e)
+
 
 def list_student_courses(cmd: ListStudentCourses, repo: LocalRepository):
     student = repo.get(id=cmd.id)
@@ -161,11 +168,13 @@ def prompt_add_course(repo: LocalRepository):
 
     add_course(AddCourse(id, student_id, name, credit), repo)
 
+
 def prompt_list_student_courses(repo: LocalRepository):
     print("Student ID:")
     id = str(input())
 
     list_student_courses(ListStudentCourses(id), repo)
+
 
 def prompt_create_student(repo: LocalRepository):
     print("Student ID:")
@@ -176,8 +185,10 @@ def prompt_create_student(repo: LocalRepository):
     date_of_birth = str(input())
     create_student(CreateStudent(id, name, date_of_birth), repo)
 
+
 def prompt_list_students(repo: LocalRepository):
     list_students(repo)
+
 
 def prompt_update_course_mark(repo: LocalRepository):
     print("Student ID: ")
@@ -188,6 +199,7 @@ def prompt_update_course_mark(repo: LocalRepository):
     mark = float(input())
 
     update_course_mark(UpdateCourseMark(id, student_id, mark), repo)
+
 
 def main():
     repo = LocalRepository([])
